@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Конвертер YouTube / VK</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; }
+    input, select, button { padding: 8px 10px; font-size: 14px; }
+    input { width: 60%; }
+    #status { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <h1>Конвертер YouTube / VK Video</h1>
+  <p>Вставь ссылку на видео и выбери формат:</p>
+
+  <input id="url" type="text" placeholder="https://youtube.com/... или https://vk.com/video...">
+  <select id="format">
+    <option value="video">Видео (MP4)</option>
+    <option value="audio">Аудио (MP3)</option>
+  </select>
+  <button onclick="convert()">Скачать</button>
+
+  <div id="status"></div>
+
+  <script>
+    async function convert() {
+      const url = document.getElementById('url').value.trim();
+      const format = document.getElementById('format').value;
+      const status = document.getElementById('status');
+
+      if (!url) {
+        status.textContent = 'Вставь ссылку на видео.';
+        return;
+      }
+
+      status.textContent = 'Обработка... Это может занять время.';
+
+      try {
+        const res = await fetch('/convert', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({url, format})
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          status.textContent = 'Ошибка: ' + text;
+          return;
+        }
+
+        const blob = await res.blob();
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'file.' + (format === 'audio' ? 'mp3' : 'mp4');
+        a.click();
+        status.textContent = 'Готово! Скачивание началось.';
+      } catch (e) {
+        status.textContent = 'Ошибка соединения: ' + e;
+      }
+    }
+  </script>
+</body>
+</html>
